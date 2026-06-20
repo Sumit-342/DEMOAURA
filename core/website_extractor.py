@@ -3,6 +3,8 @@ import uuid
 import hashlib
 from datetime import datetime, timezone
 from playwright.async_api import async_playwright, Page, ElementHandle
+from understanding.purpose_engine import detect_purpose
+from core.cleaner import clean_website_data
 
 # -------------------------------------------------------------------
 # CONFIG
@@ -150,9 +152,25 @@ async def extract_website(url: str, headless: bool = True):
             page = await browser.new_page(viewport={"width": 1280, "height": 720})
 
             print(f"🚀 Navigating: {url}")
-            await page.goto(url, wait_until="domcontentloaded", timeout=10000)
-            await page.wait_for_timeout(1500)
+            await page.goto(
+                url,
+                wait_until="networkidle",   # ✅ better for modern JS frameworks
+                timeout=15000
+            )
 
+            # ✅ Universal scroll to trigger lazy load
+            page_height = await page.evaluate("document.body.scrollHeight")
+            viewport_height = page.viewport_size["height"]
+
+            for y in range(0, page_height, viewport_height):
+                await page.evaluate(f"window.scrollTo(0,{y})")
+                await page.wait_for_timeout(500)
+
+            # ✅ Reset to top before extraction (for bbox consistency)
+            await page.evaluate("window.scrollTo(0,0)")
+            await page.wait_for_timeout(500)
+
+            # ✅ Extract unified + legacy data
             unified = await _extract_page(page, url)
 
             legacy = {
@@ -177,18 +195,41 @@ async def extract_website(url: str, headless: bool = True):
             print(f"❌ Extraction failed: {e}")
             return None, None
 
+
 # -------------------------------------------------------------------
 # RUN
 # -------------------------------------------------------------------
 
-async def main():
-    url = input("Enter URL: ").strip()
+async def run_pipeline(url: str):
+    # 1. Extract raw + legacy data
     unified, legacy = await extract_website(url, headless=False)
 
     if unified:
         print("\n✅ TOTAL ELEMENTS:", unified["meta"]["total_elements"])
-        print("\nSAMPLE:")
-        print(unified["elements"][:5])
+        print("\nSAMPLE ELEMENTS:")
+        for el in unified["elements"][:5]:
+            print(el)
+    
+    if not legacy:
+        print("❌ Extraction failed")
+        return None
+
+    # 2. Clean the legacy data
+    cleaned = clean_website_data(legacy)
+
+    # 3. Detect purpose
+    purpose = detect_purpose(cleaned)
+
+    return purpose
+
+async def main():
+    url = input("Enter URL: ").strip()
+    result = await run_pipeline(url)
+
+    if result:
+        print("\n✅ Purpose Engine Output:")
+        print(result)
 
 if __name__ == "__main__":
     asyncio.run(main())
+
