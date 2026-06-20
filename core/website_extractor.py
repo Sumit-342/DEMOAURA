@@ -1,10 +1,12 @@
 import asyncio
 import uuid
 import hashlib
+import json
 from datetime import datetime, timezone
 from playwright.async_api import async_playwright, Page, ElementHandle
 from understanding.purpose_engine import detect_purpose
 from core.cleaner import clean_website_data
+from importance.importance_engine import rank_importance
 
 # -------------------------------------------------------------------
 # CONFIG
@@ -219,17 +221,30 @@ async def run_pipeline(url: str):
 
     # 3. Detect purpose
     purpose = detect_purpose(cleaned)
+   
 
-    return purpose
+    # 4. Rank importance
+    importance = rank_importance(unified, purpose)
+  
+    result = {
+        "purpose": purpose,
+        "importance": importance
+    }
+
+    print("\n🎯 FULL PIPELINE OUTPUT:")
+    print(json.dumps(result, indent=4))
+
 
 async def main():
     url = input("Enter URL: ").strip()
     result = await run_pipeline(url)
 
     if result:
-        print("\n✅ Purpose Engine Output:")
-        print(result)
+        print("\n🎯 Pipeline Complete")
+        print("Purpose:", result["purpose"]["website_type"])
+        print("Top Important Elements:", len(result["importance"]["important_elements"]))
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
