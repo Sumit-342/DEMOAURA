@@ -7,6 +7,8 @@ from playwright.async_api import async_playwright, Page, ElementHandle
 from understanding.purpose_engine import detect_purpose
 from core.cleaner import clean_website_data
 from importance.importance_engine import rank_importance
+from scene_builder.coordinate_mapper import build_id_index , attach_coordinates
+from scene_builder.scene_builder import build_scenes
 
 # -------------------------------------------------------------------
 # CONFIG
@@ -225,15 +227,31 @@ async def run_pipeline(url: str):
 
     # 4. Rank importance
     importance = rank_importance(unified, purpose)
+
+    # Scene Builder
+    scene_plan = build_scenes(importance)
+
+    # Coordinate Mapper
+    enriched_scenes = attach_coordinates(
+        scene_plan,
+        unified
+    )
+    
   
     result = {
         "purpose": purpose,
-        "importance": importance
+        "importance": importance,
+        "scenes" : scene_plan,
+        "enriched_scenes": enriched_scenes,
     }
 
-    print("\n🎯 FULL PIPELINE OUTPUT:")
-    print(json.dumps(result, indent=4))
+    # print("\n🎯 FULL PIPELINE OUTPUT:")
+    # print(json.dumps(result, indent=4))
+    print("\n🎬 SCENE PLAN:")
+    print(json.dumps(scene_plan, indent=4))
 
+    print("\n📍 ENRICHED SCENES:")
+    print(json.dumps(enriched_scenes, indent=4))
 
 async def main():
     url = input("Enter URL: ").strip()
