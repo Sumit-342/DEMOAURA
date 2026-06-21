@@ -49,6 +49,13 @@ async def _extract_element(el: ElementHandle, tag: str, viewport: dict):
         text_raw = await el.inner_text()
         bbox = await el.bounding_box()
 
+        page_y = await el.evaluate("""
+        (node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.top + window.scrollY;
+        }
+        """)
+
         if not bbox:
             return None
 
@@ -86,7 +93,7 @@ async def _extract_element(el: ElementHandle, tag: str, viewport: dict):
             "isFixed": is_fixed,
             "bbox": {
                 "x": round(bbox["x"]),
-                "y": round(bbox["y"]),
+                "y": round(page_y),
                 "width": round(bbox["width"]),
                 "height": round(bbox["height"])
             },
@@ -97,7 +104,7 @@ async def _extract_element(el: ElementHandle, tag: str, viewport: dict):
             ),
             "center": {
                 "x": bbox["x"] + bbox["width"] / 2,
-                "y": bbox["y"] + bbox["height"] / 2
+                "y": page_y + bbox["height"] / 2
             },
             "importance_score": None,
             "scene_id": None
@@ -245,13 +252,9 @@ async def run_pipeline(url: str):
         "enriched_scenes": enriched_scenes,
     }
 
-    # print("\n🎯 FULL PIPELINE OUTPUT:")
-    # print(json.dumps(result, indent=4))
-    print("\n🎬 SCENE PLAN:")
-    print(json.dumps(scene_plan, indent=4))
-
-    print("\n📍 ENRICHED SCENES:")
-    print(json.dumps(enriched_scenes, indent=4))
+    print("\n🎯 FULL PIPELINE OUTPUT:")
+    print(json.dumps(result, indent=4))
+  
 
 async def main():
     url = input("Enter URL: ").strip()
