@@ -12,6 +12,8 @@ from scene_builder.scene_builder import build_scenes
 from camera_planner.camera_planner import plan_camera 
 from camera_planner.motion_planner import plan_motion
 from camera_planner.transition_planner import plan_transitions
+from camera_planner.timeline_planner import plan_timeline
+from renderer.screenshot_engine import capture_screenshot
 
 # -------------------------------------------------------------------
 # CONFIG
@@ -255,6 +257,15 @@ async def run_pipeline(url: str):
 
     # Transition Planner
     transition_plan = plan_transitions(camera_plan)
+
+    # Timeline Planner 
+    timeline_plan = plan_timeline(
+    motion_plan,
+    transition_plan
+    )
+
+    # Taking Screenshot 
+    screenshot_data = await capture_screenshot(url)
     
   
     result = {
@@ -265,6 +276,8 @@ async def run_pipeline(url: str):
         "camera_plan" : camera_plan,
         "motion_plan" : motion_plan,
         "transition_plan": transition_plan,
+        "timeline_plan" : timeline_plan,
+        "screenshot" : screenshot_data,
     }
 
     # print("\n🎯 FULL PIPELINE OUTPUT:")
@@ -278,6 +291,12 @@ async def run_pipeline(url: str):
 
     print("\n🎞️ TRANSITION PLAN:")
     print(json.dumps(transition_plan, indent=4))
+
+    print("\n⏱️ TIMELINE PLAN:")
+    print(json.dumps(timeline_plan, indent=4))
+
+    print("\n📸 SCREENSHOT:")
+    print(json.dumps(screenshot_data, indent=4))
   
 
 async def main():
