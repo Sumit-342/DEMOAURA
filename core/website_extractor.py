@@ -280,23 +280,8 @@ async def run_pipeline(url: str):
         "screenshot" : screenshot_data,
     }
 
-    # print("\n🎯 FULL PIPELINE OUTPUT:")
-    # print(json.dumps(result, indent=4))
-
-    print("\n🎥 CAMERA PLAN:")
-    print(json.dumps(camera_plan, indent=4))
-
-    print("\n🎞️ MOTION PLAN:")
-    print(json.dumps(motion_plan, indent=4))
-
-    print("\n🎞️ TRANSITION PLAN:")
-    print(json.dumps(transition_plan, indent=4))
-
-    print("\n⏱️ TIMELINE PLAN:")
-    print(json.dumps(timeline_plan, indent=4))
-
-    print("\n📸 SCREENSHOT:")
-    print(json.dumps(screenshot_data, indent=4))
+    print("\n🎯 FULL PIPELINE OUTPUT:")
+    print(json.dumps(result, indent=4))
   
 
 async def main():
