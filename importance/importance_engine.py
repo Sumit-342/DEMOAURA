@@ -66,7 +66,9 @@ def detect_category(element_text: str, tag: str, bbox: dict) -> str:
 
 
     # Then project detection
-    if tag != "link" and any(k in text_lower for k in PROJECT_KEYWORDS):
+    if tag in {"h1", "h2", "h3"} and any(
+        k in text_lower for k in PROJECT_KEYWORDS
+    ):
         return "project"
     
     if "github" in text_lower or "repository" in text_lower:
@@ -96,7 +98,9 @@ def detect_category(element_text: str, tag: str, bbox: dict) -> str:
         "let's connect"
     }
 
-    if any(k in text_lower for k in CTA_KEYWORDS):
+    if tag in {"h1", "h2", "h3"} and any(
+        k in text_lower for k in CTA_KEYWORDS
+    ):
         return "cta"
 
     # --------------------------------------------------

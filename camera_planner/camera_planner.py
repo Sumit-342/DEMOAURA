@@ -2,38 +2,60 @@ from typing import List, Dict
 
 def plan_camera(enriched_scenes: List[Dict]) -> List[Dict]:
     """
-    Generate simple rule-based camera instructions for each scene.
-    Args:
-        enriched_scenes: List of enriched scene dicts (with bbox + center).
-    Returns:
-        List of scenes with camera instructions added.
+    Generate intelligent rule-based camera instructions for each scene.
+    Adds focus_point, scene_bbox, and target_elements metadata.
     """
 
     output = []
 
     for scene in enriched_scenes:
-        shot = None
-        duration = None
+        elements = scene.get("elements", [])
+
+        # --- Focus Point (average of centers) ---
+        if elements:
+            focus_x = sum(el["center"]["x"] for el in elements) / len(elements)
+            focus_y = sum(el["center"]["y"] for el in elements) / len(elements)
+            focus_point = {"x": round(focus_x, 2), "y": round(focus_y, 2)}
+        else:
+            focus_point = None
+
+        # --- Scene Bounding Box (union of all bboxes) ---
+        if elements:
+            left   = min(el["bbox"]["x"] for el in elements)
+            top    = min(el["bbox"]["y"] for el in elements)
+            right  = max(el["bbox"]["x"] + el["bbox"]["width"] for el in elements)
+            bottom = max(el["bbox"]["y"] + el["bbox"]["height"] for el in elements)
+
+            scene_bbox = {
+                "x": left,
+                "y": top,
+                "width": round(right - left ,2),
+                "height": round( bottom - top,2),
+            }
+        else:
+            scene_bbox = None
+
+        # --- Target Elements ---
+        target_elements = [el["id"] for el in elements]
+
+        # --- Rule-based shot selection ---
+        shot = "static"
+        duration = 3
 
         if scene["type"] == "hero":
-            shot = "zoom_in"
-            duration = 3
+            shot, duration = "zoom_in", 3
 
         elif scene["type"] == "skill":
-            shot = "pan_down"
-            duration = 4
+            shot, duration = "pan_down", 4
 
         elif scene["type"] == "project":
-            shot = "focus"
-            duration = 4
+            shot, duration = "focus", 4
 
         elif scene["type"] == "cta":
-            shot = "cta_zoom"
-            duration = 2
+            shot, duration = "cta_zoom", 2
 
         elif scene["type"] == "contact":
-            shot = "static"
-            duration = 2
+            shot, duration = "static", 2
 
         scene_out = {
             "scene_id": scene["scene_id"],
@@ -41,10 +63,12 @@ def plan_camera(enriched_scenes: List[Dict]) -> List[Dict]:
             "element_count": scene.get("element_count", 0),
             "camera": {
                 "shot": shot,
-                "duration": duration
+                "duration": duration,
+                "focus_point": focus_point,
+                "scene_bbox": scene_bbox,
+                "target_elements": target_elements
             }
         }
-
 
         output.append(scene_out)
 
@@ -56,11 +80,14 @@ def plan_camera(enriched_scenes: List[Dict]) -> List[Dict]:
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     mock_scenes = [
-        {"scene_id": 1, "type": "hero", "elements": []},
-        {"scene_id": 2, "type": "skill", "elements": []},
-        {"scene_id": 3, "type": "project", "elements": []},
-        {"scene_id": 4, "type": "cta", "elements": []},
-        {"scene_id": 5, "type": "contact", "elements": []},
+        {
+            "scene_id": 1,
+            "type": "hero",
+            "elements": [
+                {"id": "el_1", "bbox": {"x": 484, "y": 164, "width": 667, "height": 56}, "center": {"x": 817.5, "y": 192}},
+                {"id": "el_2", "bbox": {"x": 484, "y": 298, "width": 667, "height": 56}, "center": {"x": 817.5, "y": 326}},
+            ]
+        }
     ]
 
     result = plan_camera(mock_scenes)
