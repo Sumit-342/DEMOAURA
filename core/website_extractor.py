@@ -11,6 +11,7 @@ from scene_builder.coordinate_mapper import build_id_index , attach_coordinates
 from scene_builder.scene_builder import build_scenes
 from camera_planner.camera_planner import plan_camera 
 from camera_planner.motion_planner import plan_motion
+from camera_planner.transition_planner import plan_transitions
 
 # -------------------------------------------------------------------
 # CONFIG
@@ -251,6 +252,9 @@ async def run_pipeline(url: str):
 
     # Motion Planner
     motion_plan = plan_motion(camera_plan)
+
+    # Transition Planner
+    transition_plan = plan_transitions(camera_plan)
     
   
     result = {
@@ -259,7 +263,8 @@ async def run_pipeline(url: str):
         "scenes" : scene_plan,
         "enriched_scenes": enriched_scenes,
         "camera_plan" : camera_plan,
-        "motion_plan" : motion_plan
+        "motion_plan" : motion_plan,
+        "transition_plan": transition_plan,
     }
 
     # print("\n🎯 FULL PIPELINE OUTPUT:")
@@ -270,6 +275,9 @@ async def run_pipeline(url: str):
 
     print("\n🎞️ MOTION PLAN:")
     print(json.dumps(motion_plan, indent=4))
+
+    print("\n🎞️ TRANSITION PLAN:")
+    print(json.dumps(transition_plan, indent=4))
   
 
 async def main():
