@@ -9,7 +9,8 @@ from core.cleaner import clean_website_data
 from importance.importance_engine import rank_importance
 from scene_builder.coordinate_mapper import build_id_index , attach_coordinates
 from scene_builder.scene_builder import build_scenes
-from camera_planner.camera_planner import plan_camera
+from camera_planner.camera_planner import plan_camera 
+from camera_planner.motion_planner import plan_motion
 
 # -------------------------------------------------------------------
 # CONFIG
@@ -247,6 +248,9 @@ async def run_pipeline(url: str):
 
     # Camera Planner 
     camera_plan = plan_camera(enriched_scenes)
+
+    # Motion Planner
+    motion_plan = plan_motion(camera_plan)
     
   
     result = {
@@ -255,6 +259,7 @@ async def run_pipeline(url: str):
         "scenes" : scene_plan,
         "enriched_scenes": enriched_scenes,
         "camera_plan" : camera_plan,
+        "motion_plan" : motion_plan
     }
 
     # print("\n🎯 FULL PIPELINE OUTPUT:")
@@ -262,6 +267,9 @@ async def run_pipeline(url: str):
 
     print("\n🎥 CAMERA PLAN:")
     print(json.dumps(camera_plan, indent=4))
+
+    print("\n🎞️ MOTION PLAN:")
+    print(json.dumps(motion_plan, indent=4))
   
 
 async def main():
